@@ -1,3 +1,7 @@
+output "batch_applications_id" {
+  description = "Map of id values across all batch_applications, keyed the same as var.batch_applications"
+  value       = { for k, v in azurerm_batch_application.batch_applications : k => v.id }
+}
 output "batch_applications_account_name" {
   description = "Map of account_name values across all batch_applications, keyed the same as var.batch_applications"
   value       = { for k, v in azurerm_batch_application.batch_applications : k => v.account_name }
