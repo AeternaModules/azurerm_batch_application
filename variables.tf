@@ -15,7 +15,7 @@ EOT
     account_name        = string
     name                = string
     resource_group_name = string
-    allow_updates       = optional(bool) # Default: true
+    allow_updates       = optional(bool)
     default_version     = optional(string)
     display_name        = optional(string)
   }))
