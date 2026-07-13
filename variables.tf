@@ -19,53 +19,62 @@ EOT
     default_version     = optional(string)
     display_name        = optional(string)
   }))
-  # --- Unconfirmed validation candidates, derived from azurerm_batch_application's provider source ---
-  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
-  # or a path that crosses a list-typed block (needs its own for_each wrapping).
-  # Review, translate into a real validation{} block above, and delete once confirmed.
-  # path: name
-  #   source:    [from validate.ApplicationName] !regexp.MustCompile(`^[-_\da-zA-Z]+$`).MatchString(value)
-  # path: name
-  #   source:    [from validate.ApplicationName] 1 > len(value)
-  # path: name
-  #   condition: length(value) <= 64
-  #   message:   [from validate.ApplicationName: invalid when len(value) > 64]
-  #   source:    [from validate.ApplicationName: invalid when len(value) > 64]
-  # path: resource_group_name
-  #   condition: length(value) <= 90
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  # path: resource_group_name
-  #   condition: !endswith(value, ".")
-  #   message:   [from resourcegroups.ValidateName: must not end with "."]
-  #   source:    [from resourcegroups.ValidateName: must not end with "."]
-  # path: resource_group_name
-  #   condition: length(value) != 0
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  # path: resource_group_name
-  #   source:    [from resourcegroups.ValidateName] !matched
-  # path: account_name
-  #   source:    [from validate.AccountName] !regexp.MustCompile(`^[a-z0-9]+$`).MatchString(value)
-  # path: account_name
-  #   source:    [from validate.AccountName] 3 > len(value)
-  # path: account_name
-  #   condition: length(value) <= 24
-  #   message:   [from validate.AccountName: invalid when len(value) > 24]
-  #   source:    [from validate.AccountName: invalid when len(value) > 24]
-  # path: default_version
-  #   source:    [from validate.ApplicationVersion] !regexp.MustCompile(`^[-._\da-zA-Z]+$`).MatchString(value)
-  # path: default_version
-  #   source:    [from validate.ApplicationVersion] 1 > len(value)
-  # path: default_version
-  #   condition: length(value) <= 64
-  #   message:   [from validate.ApplicationVersion: invalid when len(value) > 64]
-  #   source:    [from validate.ApplicationVersion: invalid when len(value) > 64]
-  # path: display_name
-  #   source:    [from validate.ApplicationDisplayName] 1 > len(value)
-  # path: display_name
-  #   condition: length(value) <= 1024
-  #   message:   [from validate.ApplicationDisplayName: invalid when len(value) > 1024]
-  #   source:    [from validate.ApplicationDisplayName: invalid when len(value) > 1024]
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        length(v.name) <= 64
+      )
+    ])
+    error_message = "[from validate.ApplicationName: invalid when len(value) > 64]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        length(v.resource_group_name) <= 90
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) > 90]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        !endswith(v.resource_group_name, ".")
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: must not end with \".\"]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        length(v.resource_group_name) != 0
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) == 0]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        length(v.account_name) <= 24
+      )
+    ])
+    error_message = "[from validate.AccountName: invalid when len(value) > 24]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        v.default_version == null || (length(v.default_version) <= 64)
+      )
+    ])
+    error_message = "[from validate.ApplicationVersion: invalid when len(value) > 64]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.batch_applications : (
+        v.display_name == null || (length(v.display_name) <= 1024)
+      )
+    ])
+    error_message = "[from validate.ApplicationDisplayName: invalid when len(value) > 1024]"
+  }
+  # Note: 8 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
